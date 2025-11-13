@@ -1,5 +1,383 @@
-import { useState, useEffect, useRef } from 'react';
-import { Brain, Zap, Target, Mail, ArrowRight, Menu, X, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Brain, Zap, Target, Mail, ArrowRight, Menu, X, ChevronDown, Globe } from 'lucide-react';
+
+// Языковые данные
+const translations = {
+    en: {
+        nav: {
+            about: 'About',
+            models: 'Models',
+            process: 'Process',
+            contact: 'Contact'
+        },
+        hero: {
+            title: ['Artificial', 'Intelligence', 'Innovation', 'Future'],
+            subtitle: 'Transforming businesses with cutting-edge AI solutions',
+            cta: 'Get Started'
+        },
+        about: {
+            title: 'About Us',
+            text: 'We are pioneering the future of artificial intelligence, creating solutions that empower businesses to achieve unprecedented growth and efficiency.',
+            stats: [
+                { number: '500+', label: 'Projects Completed' },
+                { number: '50+', label: 'AI Models Deployed' },
+                { number: '99.9%', label: 'Accuracy Rate' }
+            ]
+        },
+        models: {
+            title: 'Our AI Models',
+            items: [
+                {
+                    title: 'Vision AI',
+                    description: 'Advanced computer vision for image recognition and analysis',
+                    features: [
+                        'Object detection and tracking',
+                        'Facial recognition',
+                        'Image classification',
+                        'Real-time processing'
+                    ]
+                },
+                {
+                    title: 'NLP Engine',
+                    description: 'Natural language processing for text understanding',
+                    features: [
+                        'Sentiment analysis',
+                        'Text generation',
+                        'Language translation',
+                        'Chatbot integration'
+                    ]
+                },
+                {
+                    title: 'Predictive AI',
+                    description: 'Machine learning models for forecasting and predictions',
+                    features: [
+                        'Time series forecasting',
+                        'Anomaly detection',
+                        'Customer behavior prediction',
+                        'Risk assessment'
+                    ]
+                }
+            ],
+            learnMore: 'Learn More',
+            showLess: 'Show Less'
+        },
+        process: {
+            title: 'Our Process',
+            steps: [
+                { number: '01', title: 'Discovery', text: 'Understanding your business needs' },
+                { number: '02', title: 'Design', text: 'Creating tailored AI solutions' },
+                { number: '03', title: 'Development', text: 'Building and training models' },
+                { number: '04', title: 'Deployment', text: 'Launching and monitoring' }
+            ]
+        },
+        contact: {
+            title: 'Get In Touch',
+            subtitle: 'Ready to transform your business with AI?',
+            form: {
+                name: 'Your Name',
+                email: 'Your Email',
+                message: 'Your Message',
+                submit: 'Send Message'
+            },
+            success: {
+                title: 'Thank you!',
+                text: "We'll get back to you soon."
+            }
+        },
+        footer: {
+            description: 'Building the future with artificial intelligence',
+            quickLinks: 'Quick Links',
+            connect: 'Connect'
+        }
+    },
+    ru: {
+        nav: {
+            about: 'О нас',
+            models: 'Модели',
+            process: 'Процесс',
+            contact: 'Контакты'
+        },
+        hero: {
+            title: ['Искусственный', 'Интеллект', 'Инновации', 'Будущее'],
+            subtitle: 'Трансформируем бизнес с помощью передовых AI-решений',
+            cta: 'Начать'
+        },
+        about: {
+            title: 'О нас',
+            text: 'Мы создаем будущее искусственного интеллекта, разрабатывая решения, которые помогают бизнесу достигать беспрецедентного роста и эффективности.',
+            stats: [
+                { number: '500+', label: 'Завершенных проектов' },
+                { number: '50+', label: 'Развернутых AI-моделей' },
+                { number: '99.9%', label: 'Точность' }
+            ]
+        },
+        models: {
+            title: 'Наши AI-модели',
+            items: [
+                {
+                    title: 'Vision AI',
+                    description: 'Продвинутое компьютерное зрение для распознавания изображений',
+                    features: [
+                        'Обнаружение и отслеживание объектов',
+                        'Распознавание лиц',
+                        'Классификация изображений',
+                        'Обработка в реальном времени'
+                    ]
+                },
+                {
+                    title: 'NLP Engine',
+                    description: 'Обработка естественного языка для понимания текста',
+                    features: [
+                        'Анализ тональности',
+                        'Генерация текста',
+                        'Перевод языков',
+                        'Интеграция чат-ботов'
+                    ]
+                },
+                {
+                    title: 'Predictive AI',
+                    description: 'Модели машинного обучения для прогнозирования',
+                    features: [
+                        'Прогнозирование временных рядов',
+                        'Обнаружение аномалий',
+                        'Прогноз поведения клиентов',
+                        'Оценка рисков'
+                    ]
+                }
+            ],
+            learnMore: 'Подробнее',
+            showLess: 'Скрыть'
+        },
+        process: {
+            title: 'Наш процесс',
+            steps: [
+                { number: '01', title: 'Исследование', text: 'Понимание потребностей вашего бизнеса' },
+                { number: '02', title: 'Проектирование', text: 'Создание индивидуальных AI-решений' },
+                { number: '03', title: 'Разработка', text: 'Создание и обучение моделей' },
+                { number: '04', title: 'Развертывание', text: 'Запуск и мониторинг' }
+            ]
+        },
+        contact: {
+            title: 'Связаться с нами',
+            subtitle: 'Готовы трансформировать ваш бизнес с помощью AI?',
+            form: {
+                name: 'Ваше имя',
+                email: 'Ваш email',
+                message: 'Ваше сообщение',
+                submit: 'Отправить'
+            },
+            success: {
+                title: 'Спасибо!',
+                text: 'Мы свяжемся с вами в ближайшее время.'
+            }
+        },
+        footer: {
+            description: 'Создаем будущее с искусственным интеллектом',
+            quickLinks: 'Быстрые ссылки',
+            connect: 'Связь'
+        }
+    }
+};
+
+// Компонент 3D AI Neural Network Animation
+const NeuralNetworkAnimation = () => {
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        let animationId;
+
+        const setCanvasSize = () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        };
+        setCanvasSize();
+        window.addEventListener('resize', setCanvasSize);
+
+        // Узлы нейронной сети
+        class Node {
+            constructor(x, y, z, layer) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+                this.layer = layer;
+                this.baseX = x;
+                this.baseY = y;
+                this.baseZ = z;
+                this.pulse = Math.random() * Math.PI * 2;
+            }
+
+            update(time) {
+                this.pulse += 0.02;
+                const pulseAmount = Math.sin(this.pulse) * 2;
+                this.z = this.baseZ + pulseAmount;
+            }
+
+            project(width, height) {
+                const scale = 200 / (200 + this.z);
+                return {
+                    x: this.x * scale + width / 2,
+                    y: this.y * scale + height / 2,
+                    scale: scale
+                };
+            }
+        }
+
+        // Создание слоев нейронной сети
+        const layers = [5, 8, 8, 5];
+        const nodes = [];
+        const layerSpacing = 150;
+
+        layers.forEach((nodeCount, layerIndex) => {
+            const startX = -((layers.length - 1) * layerSpacing) / 2;
+            const x = startX + layerIndex * layerSpacing;
+            const nodeSpacing = 60;
+            const startY = -((nodeCount - 1) * nodeSpacing) / 2;
+
+            for (let i = 0; i < nodeCount; i++) {
+                const y = startY + i * nodeSpacing;
+                const z = (Math.random() - 0.5) * 50;
+                nodes.push(new Node(x, y, z, layerIndex));
+            }
+        });
+
+        // Создание связей между слоями
+        const connections = [];
+        let nodeIndex = 0;
+        for (let layer = 0; layer < layers.length - 1; layer++) {
+            const currentLayerSize = layers[layer];
+            const nextLayerSize = layers[layer + 1];
+
+            for (let i = 0; i < currentLayerSize; i++) {
+                for (let j = 0; j < nextLayerSize; j++) {
+                    connections.push({
+                        from: nodeIndex + i,
+                        to: nodeIndex + currentLayerSize + j,
+                        activity: Math.random()
+                    });
+                }
+            }
+            nodeIndex += currentLayerSize;
+        }
+
+        let time = 0;
+        let rotation = 0;
+
+        const animate = () => {
+            time += 0.016;
+            rotation += 0.003;
+
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Обновление узлов
+            nodes.forEach(node => node.update(time));
+
+            // Применение вращения
+            const rotatedNodes = nodes.map(node => {
+                const cos = Math.cos(rotation);
+                const sin = Math.sin(rotation);
+                const x = node.x * cos - node.z * sin;
+                const z = node.x * sin + node.z * cos;
+                return {
+                    x,
+                    y: node.y,
+                    z,
+                    layer: node.layer,
+                    project: (width, height) => {
+                        const scale = 200 / (200 + z);
+                        return {
+                            x: x * scale + width / 2,
+                            y: node.y * scale + height / 2,
+                            scale: scale
+                        };
+                    }
+                };
+            });
+
+            // Сортировка по глубине
+            const sortedConnections = connections
+                .map(conn => ({
+                    ...conn,
+                    avgZ: (rotatedNodes[conn.from].z + rotatedNodes[conn.to].z) / 2
+                }))
+                .sort((a, b) => a.avgZ - b.avgZ);
+
+            // Рисование связей
+            sortedConnections.forEach(conn => {
+                const from = rotatedNodes[conn.from].project(width, height);
+                const to = rotatedNodes[conn.to].project(width, height);
+
+                conn.activity += (Math.random() - 0.5) * 0.1;
+                conn.activity = Math.max(0, Math.min(1, conn.activity));
+
+                const opacity = conn.activity * 0.3;
+                const gradient = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
+                gradient.addColorStop(0.5, `rgba(255, 0, 0, ${opacity * 1.5})`);
+                gradient.addColorStop(1, `rgba(255, 255, 255, ${opacity})`);
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = conn.activity * 2;
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.stroke();
+            });
+
+            // Рисование узлов
+            const sortedNodes = rotatedNodes
+                .map((node, index) => ({ node, index }))
+                .sort((a, b) => a.node.z - b.node.z);
+
+            sortedNodes.forEach(({ node, index }) => {
+                const pos = node.project(width, height);
+                const size = 4 + pos.scale * 3;
+
+                const brightness = (node.z + 100) / 200;
+                const glow = Math.sin(time * 2 + index * 0.5) * 0.5 + 0.5;
+
+                // Внешнее свечение
+                const gradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, size * 3);
+                gradient.addColorStop(0, `rgba(255, 0, 0, ${glow * 0.5})`);
+                gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, size * 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Основной узел
+                ctx.fillStyle = `rgba(255, ${Math.floor(brightness * 50)}, ${Math.floor(brightness * 50)}, ${0.8 + glow * 0.2})`;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Внутреннее ядро
+                ctx.fillStyle = `rgba(255, 255, 255, ${glow})`;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            animationId = requestAnimationFrame(animate);
+        };
+
+        animate();
+
+        return () => {
+            window.removeEventListener('resize', setCanvasSize);
+            cancelAnimationFrame(animationId);
+        };
+    }, []);
+
+    return <canvas ref={canvasRef} className="neural-canvas" />;
+};
 
 // Хук для анимации при скролле
 const useScrollAnimation = () => {
@@ -31,16 +409,15 @@ const useScrollAnimation = () => {
 };
 
 // Компонент Hero Section
-const HeroSection = () => {
+const HeroSection = ({ t, lang }) => {
     const [textIndex, setTextIndex] = useState(0);
-    const texts = ['Intelligence', 'Innovation', 'Future'];
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setTextIndex((prev) => (prev + 1) % texts.length);
+            setTextIndex((prev) => (prev + 1) % t.hero.title.length);
         }, 3000);
         return () => clearInterval(interval);
-    }, []);
+    }, [t.hero.title.length]);
 
     const scrollToSection = (id) => {
         document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -48,24 +425,20 @@ const HeroSection = () => {
 
     return (
         <section className="hero">
-            <div className="floating-shapes">
-                <div className="shape shape-1"></div>
-                <div className="shape shape-2"></div>
-                <div className="shape shape-3"></div>
-            </div>
+            <NeuralNetworkAnimation />
 
             <div className="hero-content">
                 <h1 className="hero-title">
-                    Artificial
+                    {t.hero.title[0]}
                     <span className="animated-text" key={textIndex}>
-            {texts[textIndex]}
+            {t.hero.title[textIndex]}
           </span>
                 </h1>
                 <p className="hero-subtitle">
-                    Transforming businesses with cutting-edge AI solutions
+                    {t.hero.subtitle}
                 </p>
                 <button className="cta-button" onClick={() => scrollToSection('contact')}>
-                    Get Started <ArrowRight size={20} />
+                    {t.hero.cta} <ArrowRight size={20} />
                 </button>
             </div>
 
@@ -77,30 +450,21 @@ const HeroSection = () => {
 };
 
 // Компонент About Section
-const AboutSection = () => {
+const AboutSection = ({ t }) => {
     const [ref, isVisible] = useScrollAnimation();
 
     return (
         <section id="about" className="about" ref={ref}>
             <div className={`about-content ${isVisible ? 'visible' : ''}`}>
-                <h2 className="section-title">About Us</h2>
-                <p className="about-text">
-                    We are pioneering the future of artificial intelligence, creating solutions
-                    that empower businesses to achieve unprecedented growth and efficiency.
-                </p>
+                <h2 className="section-title">{t.about.title}</h2>
+                <p className="about-text">{t.about.text}</p>
                 <div className="stats">
-                    <div className="stat-item">
-                        <h3>500+</h3>
-                        <p>Projects Completed</p>
-                    </div>
-                    <div className="stat-item">
-                        <h3>50+</h3>
-                        <p>AI Models Deployed</p>
-                    </div>
-                    <div className="stat-item">
-                        <h3>99.9%</h3>
-                        <p>Accuracy Rate</p>
-                    </div>
+                    {t.about.stats.map((stat, idx) => (
+                        <div key={idx} className="stat-item">
+                            <h3>{stat.number}</h3>
+                            <p>{stat.label}</p>
+                        </div>
+                    ))}
                 </div>
             </div>
         </section>
@@ -108,9 +472,11 @@ const AboutSection = () => {
 };
 
 // Компонент Model Card
-const ModelCard = ({ model, index }) => {
+const ModelCard = ({ model, index, t }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [ref, isVisible] = useScrollAnimation();
+
+    const icons = [<Target size={48} />, <Brain size={48} />, <Zap size={48} />];
 
     return (
         <div
@@ -120,7 +486,7 @@ const ModelCard = ({ model, index }) => {
             onClick={() => setIsExpanded(!isExpanded)}
         >
             <div className="model-icon">
-                {model.icon}
+                {icons[index]}
             </div>
             <h3 className="model-title">{model.title}</h3>
             <p className="model-description">{model.description}</p>
@@ -134,59 +500,20 @@ const ModelCard = ({ model, index }) => {
             </div>
 
             <button className="model-button">
-                {isExpanded ? 'Show Less' : 'Learn More'}
+                {isExpanded ? t.models.showLess : t.models.learnMore}
             </button>
         </div>
     );
 };
 
 // Компонент Models Section
-const ModelsSection = () => {
-    const models = [
-        {
-            id: 1,
-            title: 'Vision AI',
-            description: 'Advanced computer vision for image recognition and analysis',
-            icon: <Target size={48} />,
-            features: [
-                'Object detection and tracking',
-                'Facial recognition',
-                'Image classification',
-                'Real-time processing'
-            ]
-        },
-        {
-            id: 2,
-            title: 'NLP Engine',
-            description: 'Natural language processing for text understanding',
-            icon: <Brain size={48} />,
-            features: [
-                'Sentiment analysis',
-                'Text generation',
-                'Language translation',
-                'Chatbot integration'
-            ]
-        },
-        {
-            id: 3,
-            title: 'Predictive AI',
-            description: 'Machine learning models for forecasting and predictions',
-            icon: <Zap size={48} />,
-            features: [
-                'Time series forecasting',
-                'Anomaly detection',
-                'Customer behavior prediction',
-                'Risk assessment'
-            ]
-        }
-    ];
-
+const ModelsSection = ({ t }) => {
     return (
         <section id="models" className="models">
-            <h2 className="section-title">Our AI Models</h2>
+            <h2 className="section-title">{t.models.title}</h2>
             <div className="models-grid">
-                {models.map((model, index) => (
-                    <ModelCard key={model.id} model={model} index={index} />
+                {t.models.items.map((model, index) => (
+                    <ModelCard key={index} model={model} index={index} t={t} />
                 ))}
             </div>
         </section>
@@ -194,21 +521,14 @@ const ModelsSection = () => {
 };
 
 // Компонент Process Section
-const ProcessSection = () => {
+const ProcessSection = ({ t }) => {
     const [ref, isVisible] = useScrollAnimation();
-
-    const steps = [
-        { number: '01', title: 'Discovery', text: 'Understanding your business needs' },
-        { number: '02', title: 'Design', text: 'Creating tailored AI solutions' },
-        { number: '03', title: 'Development', text: 'Building and training models' },
-        { number: '04', title: 'Deployment', text: 'Launching and monitoring' }
-    ];
 
     return (
         <section id="process" className="process" ref={ref}>
-            <h2 className="section-title">Our Process</h2>
+            <h2 className="section-title">{t.process.title}</h2>
             <div className={`process-timeline ${isVisible ? 'visible' : ''}`}>
-                {steps.map((step, index) => (
+                {t.process.steps.map((step, index) => (
                     <div
                         key={index}
                         className="process-step"
@@ -227,7 +547,7 @@ const ProcessSection = () => {
 };
 
 // Компонент Contact Section
-const ContactSection = () => {
+const ContactSection = ({ t }) => {
     const [ref, isVisible] = useScrollAnimation();
     const [formData, setFormData] = useState({
         name: '',
@@ -252,20 +572,20 @@ const ContactSection = () => {
     return (
         <section id="contact" className="contact" ref={ref}>
             <div className={`contact-content ${isVisible ? 'visible' : ''}`}>
-                <h2 className="section-title">Get In Touch</h2>
-                <p className="contact-subtitle">Ready to transform your business with AI?</p>
+                <h2 className="section-title">{t.contact.title}</h2>
+                <p className="contact-subtitle">{t.contact.subtitle}</p>
 
                 {submitted ? (
                     <div className="success-message">
-                        <h3>Thank you!</h3>
-                        <p>We'll get back to you soon.</p>
+                        <h3>{t.contact.success.title}</h3>
+                        <p>{t.contact.success.text}</p>
                     </div>
                 ) : (
                     <form className="contact-form" onSubmit={handleSubmit}>
                         <input
                             type="text"
                             name="name"
-                            placeholder="Your Name"
+                            placeholder={t.contact.form.name}
                             value={formData.name}
                             onChange={handleChange}
                             required
@@ -273,21 +593,21 @@ const ContactSection = () => {
                         <input
                             type="email"
                             name="email"
-                            placeholder="Your Email"
+                            placeholder={t.contact.form.email}
                             value={formData.email}
                             onChange={handleChange}
                             required
                         />
                         <textarea
                             name="message"
-                            placeholder="Your Message"
+                            placeholder={t.contact.form.message}
                             value={formData.message}
                             onChange={handleChange}
                             rows="5"
                             required
                         />
                         <button type="submit" className="submit-button">
-                            Send Message <Mail size={20} />
+                            {t.contact.form.submit} <Mail size={20} />
                         </button>
                     </form>
                 )}
@@ -297,23 +617,27 @@ const ContactSection = () => {
 };
 
 // Компонент Footer
-const Footer = () => {
+const Footer = ({ t }) => {
+    const scrollToSection = (id) => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    };
+
     return (
         <footer className="footer">
             <div className="footer-content">
                 <div className="footer-section">
                     <h3>AI Startup</h3>
-                    <p>Building the future with artificial intelligence</p>
+                    <p>{t.footer.description}</p>
                 </div>
                 <div className="footer-section">
-                    <h4>Quick Links</h4>
-                    <a href="#about">About</a>
-                    <a href="#models">Models</a>
-                    <a href="#process">Process</a>
-                    <a href="#contact">Contact</a>
+                    <h4>{t.footer.quickLinks}</h4>
+                    <a onClick={() => scrollToSection('about')}>{t.nav.about}</a>
+                    <a onClick={() => scrollToSection('models')}>{t.nav.models}</a>
+                    <a onClick={() => scrollToSection('process')}>{t.nav.process}</a>
+                    <a onClick={() => scrollToSection('contact')}>{t.nav.contact}</a>
                 </div>
                 <div className="footer-section">
-                    <h4>Connect</h4>
+                    <h4>{t.footer.connect}</h4>
                     <p>info@aistartup.com</p>
                     <p>+1 (555) 123-4567</p>
                 </div>
@@ -328,10 +652,16 @@ const Footer = () => {
 // Главный компонент
 const App = () => {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [lang, setLang] = useState('en');
+    const t = translations[lang];
 
     const scrollToSection = (id) => {
         document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
         setMenuOpen(false);
+    };
+
+    const toggleLanguage = () => {
+        setLang(lang === 'en' ? 'ru' : 'en');
     };
 
     return (
@@ -339,22 +669,28 @@ const App = () => {
             <nav className="navbar">
                 <div className="nav-logo">AI Startup</div>
                 <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
-                    <a onClick={() => scrollToSection('about')}>About</a>
-                    <a onClick={() => scrollToSection('models')}>Models</a>
-                    <a onClick={() => scrollToSection('process')}>Process</a>
-                    <a onClick={() => scrollToSection('contact')}>Contact</a>
+                    <a onClick={() => scrollToSection('about')}>{t.nav.about}</a>
+                    <a onClick={() => scrollToSection('models')}>{t.nav.models}</a>
+                    <a onClick={() => scrollToSection('process')}>{t.nav.process}</a>
+                    <a onClick={() => scrollToSection('contact')}>{t.nav.contact}</a>
                 </div>
-                <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)}>
-                    {menuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                <div className="nav-actions">
+                    <button className="lang-button" onClick={toggleLanguage}>
+                        <Globe size={20} />
+                        <span>{lang === 'en' ? 'RU' : 'EN'}</span>
+                    </button>
+                    <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)}>
+                        {menuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
             </nav>
 
-            <HeroSection />
-            <AboutSection />
-            <ModelsSection />
-            <ProcessSection />
-            <ContactSection />
-            <Footer />
+            <HeroSection t={t} lang={lang} />
+            <AboutSection t={t} />
+            <ModelsSection t={t} />
+            <ProcessSection t={t} />
+            <ContactSection t={t} />
+            <Footer t={t} />
 
             <style>{`
         * {
@@ -363,13 +699,19 @@ const App = () => {
           box-sizing: border-box;
         }
 
-        body {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        html, body {
+          width: 100%;
+          height: 100%;
           overflow-x: hidden;
         }
 
+        body {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
         .app {
-          background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+          width: 100%;
+          background: #000000;
           color: #ffffff;
           min-height: 100vh;
         }
@@ -385,7 +727,7 @@ const App = () => {
           justify-content: space-between;
           align-items: center;
           padding: 1.5rem 5%;
-          background: rgba(10, 10, 10, 0.95);
+          background: rgba(0, 0, 0, 0.95);
           backdrop-filter: blur(10px);
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -393,9 +735,7 @@ const App = () => {
         .nav-logo {
           font-size: 1.5rem;
           font-weight: 700;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: #ff0000;
         }
 
         .nav-links {
@@ -412,7 +752,32 @@ const App = () => {
         }
 
         .nav-links a:hover {
-          color: #667eea;
+          color: #ff0000;
+        }
+
+        .nav-actions {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .lang-button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 20px;
+          color: white;
+          cursor: pointer;
+          transition: all 0.3s;
+          font-weight: 500;
+        }
+
+        .lang-button:hover {
+          border-color: #ff0000;
+          color: #ff0000;
         }
 
         .menu-button {
@@ -435,48 +800,13 @@ const App = () => {
           padding-top: 80px;
         }
 
-        .floating-shapes {
+        .neural-canvas {
           position: absolute;
+          top: 0;
+          left: 0;
           width: 100%;
           height: 100%;
-          overflow: hidden;
-        }
-
-        .shape {
-          position: absolute;
-          border-radius: 50%;
-          background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-          animation: float 20s infinite ease-in-out;
-        }
-
-        .shape-1 {
-          width: 300px;
-          height: 300px;
-          top: 10%;
-          left: 10%;
-          animation-delay: 0s;
-        }
-
-        .shape-2 {
-          width: 200px;
-          height: 200px;
-          top: 60%;
-          right: 15%;
-          animation-delay: 5s;
-        }
-
-        .shape-3 {
-          width: 150px;
-          height: 150px;
-          bottom: 20%;
-          left: 60%;
-          animation-delay: 10s;
-        }
-
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) rotate(0deg); }
-          33% { transform: translate(30px, -50px) rotate(120deg); }
-          66% { transform: translate(-20px, 30px) rotate(240deg); }
+          z-index: 1;
         }
 
         .hero-content {
@@ -504,13 +834,12 @@ const App = () => {
           font-weight: 800;
           margin-bottom: 1rem;
           line-height: 1.1;
+          color: #ffffff;
         }
 
         .animated-text {
           display: block;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: #ff0000;
           animation: slideIn 0.6s ease-out;
         }
 
@@ -540,7 +869,7 @@ const App = () => {
           font-size: 1.1rem;
           font-weight: 600;
           color: white;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: #ff0000;
           border: none;
           border-radius: 50px;
           cursor: pointer;
@@ -550,12 +879,14 @@ const App = () => {
 
         .cta-button:hover {
           transform: translateY(-3px);
-          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+          box-shadow: 0 10px 30px rgba(255, 0, 0, 0.4);
+          background: #cc0000;
         }
 
         .scroll-indicator {
           position: absolute;
           bottom: 2rem;
+          z-index: 2;
           cursor: pointer;
           animation: bounce 2s infinite;
           color: rgba(255, 255, 255, 0.5);
@@ -563,7 +894,7 @@ const App = () => {
         }
 
         .scroll-indicator:hover {
-          color: #667eea;
+          color: #ff0000;
         }
 
         @keyframes bounce {
@@ -579,10 +910,12 @@ const App = () => {
           display: flex;
           align-items: center;
           justify-content: center;
+          background: #000000;
         }
 
         .about-content {
           max-width: 1200px;
+          width: 100%;
           opacity: 0;
           transform: translateY(30px);
           transition: all 0.8s ease;
@@ -598,9 +931,7 @@ const App = () => {
           font-weight: 700;
           margin-bottom: 2rem;
           text-align: center;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: #ff0000;
         }
 
         .about-text {
@@ -632,15 +963,13 @@ const App = () => {
 
         .stat-item:hover {
           transform: translateY(-5px);
-          background: rgba(102, 126, 234, 0.1);
-          border-color: rgba(102, 126, 234, 0.3);
+          background: rgba(255, 0, 0, 0.05);
+          border-color: rgba(255, 0, 0, 0.3);
         }
 
         .stat-item h3 {
           font-size: 3rem;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: #ff0000;
           margin-bottom: 0.5rem;
         }
 
@@ -653,6 +982,7 @@ const App = () => {
         .models {
           padding: 8rem 5%;
           min-height: 100vh;
+          background: #000000;
         }
 
         .models-grid {
@@ -683,8 +1013,8 @@ const App = () => {
         .model-card:hover {
           transform: translateY(-10px);
           background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(102, 126, 234, 0.3);
-          box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+          border-color: rgba(255, 0, 0, 0.3);
+          box-shadow: 0 20px 40px rgba(255, 0, 0, 0.2);
         }
 
         .model-icon {
@@ -693,15 +1023,16 @@ const App = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+          background: rgba(255, 0, 0, 0.1);
           border-radius: 20px;
           margin-bottom: 1.5rem;
-          color: #667eea;
+          color: #ff0000;
           transition: all 0.3s ease;
         }
 
         .model-card:hover .model-icon {
           transform: scale(1.1) rotate(5deg);
+          background: rgba(255, 0, 0, 0.2);
         }
 
         .model-title {
@@ -743,15 +1074,15 @@ const App = () => {
           content: "→";
           position: absolute;
           left: 0;
-          color: #667eea;
+          color: #ff0000;
         }
 
         .model-button {
           margin-top: 1.5rem;
           padding: 0.8rem 1.5rem;
           background: transparent;
-          border: 2px solid #667eea;
-          color: #667eea;
+          border: 2px solid #ff0000;
+          color: #ff0000;
           border-radius: 50px;
           cursor: pointer;
           font-weight: 600;
@@ -760,7 +1091,7 @@ const App = () => {
         }
 
         .model-button:hover {
-          background: #667eea;
+          background: #ff0000;
           color: white;
         }
 
@@ -771,6 +1102,7 @@ const App = () => {
           display: flex;
           flex-direction: column;
           justify-content: center;
+          background: #000000;
         }
 
         .process-timeline {
@@ -787,8 +1119,7 @@ const App = () => {
           transform: translateX(-50%);
           width: 2px;
           height: 100%;
-          background: linear-gradient(180deg, #667eea, #764ba2);
-          opacity: 0.3;
+          background: linear-gradient(180deg, #ff0000, rgba(255, 0, 0, 0.3));
         }
 
         .process-step {
@@ -819,9 +1150,10 @@ const App = () => {
           justify-content: center;
           font-size: 1.5rem;
           font-weight: 700;
-          background: linear-gradient(135deg, #667eea, #764ba2);
+          background: #ff0000;
           border-radius: 50%;
-          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+          box-shadow: 0 10px 30px rgba(255, 0, 0, 0.3);
+          color: white;
         }
 
         .step-content {
@@ -830,12 +1162,18 @@ const App = () => {
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 15px;
+          transition: all 0.3s ease;
+        }
+
+        .step-content:hover {
+          background: rgba(255, 0, 0, 0.05);
+          border-color: rgba(255, 0, 0, 0.3);
         }
 
         .step-content h3 {
           font-size: 1.5rem;
           margin-bottom: 0.5rem;
-          color: #667eea;
+          color: #ff0000;
         }
 
         .step-content p {
@@ -850,6 +1188,7 @@ const App = () => {
           display: flex;
           align-items: center;
           justify-content: center;
+          background: #000000;
         }
 
         .contact-content {
@@ -890,10 +1229,15 @@ const App = () => {
           transition: all 0.3s ease;
         }
 
+        .contact-form input::placeholder,
+        .contact-form textarea::placeholder {
+          color: rgba(255, 255, 255, 0.4);
+        }
+
         .contact-form input:focus,
         .contact-form textarea:focus {
           outline: none;
-          border-color: #667eea;
+          border-color: #ff0000;
           background: rgba(255, 255, 255, 0.08);
         }
 
@@ -911,7 +1255,7 @@ const App = () => {
           font-size: 1.1rem;
           font-weight: 600;
           color: white;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: #ff0000;
           border: none;
           border-radius: 10px;
           cursor: pointer;
@@ -920,27 +1264,32 @@ const App = () => {
 
         .submit-button:hover {
           transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+          box-shadow: 0 10px 30px rgba(255, 0, 0, 0.4);
+          background: #cc0000;
         }
 
         .success-message {
           text-align: center;
           padding: 3rem;
-          background: rgba(102, 126, 234, 0.1);
-          border: 1px solid rgba(102, 126, 234, 0.3);
+          background: rgba(255, 0, 0, 0.1);
+          border: 1px solid rgba(255, 0, 0, 0.3);
           border-radius: 15px;
         }
 
         .success-message h3 {
           font-size: 2rem;
           margin-bottom: 1rem;
-          color: #667eea;
+          color: #ff0000;
+        }
+
+        .success-message p {
+          color: rgba(255, 255, 255, 0.8);
         }
 
         /* Footer */
         .footer {
           padding: 4rem 5% 2rem;
-          background: rgba(0, 0, 0, 0.3);
+          background: rgba(0, 0, 0, 0.5);
           border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
@@ -955,7 +1304,7 @@ const App = () => {
         .footer-section h3,
         .footer-section h4 {
           margin-bottom: 1rem;
-          color: #667eea;
+          color: #ff0000;
         }
 
         .footer-section p,
@@ -965,10 +1314,11 @@ const App = () => {
           text-decoration: none;
           display: block;
           transition: color 0.3s;
+          cursor: pointer;
         }
 
         .footer-section a:hover {
-          color: #667eea;
+          color: #ff0000;
         }
 
         .footer-bottom {
@@ -986,7 +1336,7 @@ const App = () => {
             right: -100%;
             width: 100%;
             height: calc(100vh - 80px);
-            background: rgba(10, 10, 10, 0.98);
+            background: rgba(0, 0, 0, 0.98);
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -1040,6 +1390,10 @@ const App = () => {
             gap: 2rem;
             text-align: center;
           }
+
+          .lang-button span {
+            display: none;
+          }
         }
 
         /* Smooth Scrolling */
@@ -1049,7 +1403,7 @@ const App = () => {
 
         /* Selection Color */
         ::selection {
-          background: rgba(102, 126, 234, 0.3);
+          background: rgba(255, 0, 0, 0.3);
           color: white;
         }
 
@@ -1059,16 +1413,16 @@ const App = () => {
         }
 
         ::-webkit-scrollbar-track {
-          background: #0a0a0a;
+          background: #000000;
         }
 
         ::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #667eea, #764ba2);
+          background: #ff0000;
           border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-          background: #667eea;
+          background: #cc0000;
         }
       `}</style>
         </div>
