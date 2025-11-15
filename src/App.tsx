@@ -226,20 +226,20 @@ const NeuralNetworkAnimation = () => {
             }
         }
 
-        // Создание слоев нейронной сети
-        const layers = [5, 8, 8, 5];
+        // Создание слоев нейронной сети - меньше и компактнее
+        const layers = [5, 7, 7, 5];
         const nodes = [];
-        const layerSpacing = 150;
+        const layerSpacing = 120;
 
         layers.forEach((nodeCount, layerIndex) => {
             const startX = -((layers.length - 1) * layerSpacing) / 2;
             const x = startX + layerIndex * layerSpacing;
-            const nodeSpacing = 60;
+            const nodeSpacing = 50;
             const startY = -((nodeCount - 1) * nodeSpacing) / 2;
 
             for (let i = 0; i < nodeCount; i++) {
                 const y = startY + i * nodeSpacing;
-                const z = (Math.random() - 0.5) * 50;
+                const z = (Math.random() - 0.5) * 60;
                 nodes.push(new Node(x, y, z, layerIndex));
             }
         });
@@ -317,14 +317,14 @@ const NeuralNetworkAnimation = () => {
                 conn.activity += (Math.random() - 0.5) * 0.1;
                 conn.activity = Math.max(0, Math.min(1, conn.activity));
 
-                const opacity = conn.activity * 0.3;
+                const opacity = conn.activity * 0.2;
                 const gradient = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
-                gradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
-                gradient.addColorStop(0.5, `rgba(255, 0, 0, ${opacity * 1.5})`);
-                gradient.addColorStop(1, `rgba(255, 255, 255, ${opacity})`);
+                gradient.addColorStop(0, `rgba(200, 200, 200, ${opacity})`);
+                gradient.addColorStop(0.5, `rgba(255, 0, 0, ${opacity * 1.2})`);
+                gradient.addColorStop(1, `rgba(200, 200, 200, ${opacity})`);
 
                 ctx.strokeStyle = gradient;
-                ctx.lineWidth = conn.activity * 2;
+                ctx.lineWidth = conn.activity * 1.5;
                 ctx.beginPath();
                 ctx.moveTo(from.x, from.y);
                 ctx.lineTo(to.x, to.y);
@@ -338,31 +338,36 @@ const NeuralNetworkAnimation = () => {
 
             sortedNodes.forEach(({ node, index }) => {
                 const pos = node.project(width, height);
-                const size = 4 + pos.scale * 3;
+                const size = 3 + pos.scale * 2.5;
 
                 const brightness = (node.z + 100) / 200;
                 const glow = Math.sin(time * 2 + index * 0.5) * 0.5 + 0.5;
 
-                // Внешнее свечение
-                const gradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, size * 3);
-                gradient.addColorStop(0, `rgba(255, 0, 0, ${glow * 0.5})`);
-                gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(pos.x, pos.y, size * 3, 0, Math.PI * 2);
-                ctx.fill();
+                // Внешнее свечение (только для активных узлов)
+                if (glow > 0.7) {
+                    const gradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, size * 3);
+                    gradient.addColorStop(0, `rgba(255, 0, 0, ${glow * 0.3})`);
+                    gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, size * 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
 
-                // Основной узел
-                ctx.fillStyle = `rgba(255, ${Math.floor(brightness * 50)}, ${Math.floor(brightness * 50)}, ${0.8 + glow * 0.2})`;
+                // Основной узел (серый)
+                const grayValue = Math.floor(180 + brightness * 60);
+                ctx.fillStyle = `rgba(${grayValue}, ${grayValue}, ${grayValue}, ${0.7 + pos.scale * 0.3})`;
                 ctx.beginPath();
                 ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Внутреннее ядро
-                ctx.fillStyle = `rgba(255, 255, 255, ${glow})`;
-                ctx.beginPath();
-                ctx.arc(pos.x, pos.y, size * 0.4, 0, Math.PI * 2);
-                ctx.fill();
+                // Внутреннее ядро (белое для ярких узлов)
+                if (glow > 0.6) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${glow * 0.8})`;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, size * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             });
 
             animationId = requestAnimationFrame(animate);
@@ -711,8 +716,8 @@ const App = () => {
 
         .app {
           width: 100%;
-          background: #000000;
-          color: #ffffff;
+          background: #ffffff;
+          color: #1a1a1a;
           min-height: 100vh;
         }
 
@@ -727,15 +732,16 @@ const App = () => {
           justify-content: space-between;
           align-items: center;
           padding: 1.5rem 5%;
-          background: rgba(0, 0, 0, 0.95);
+          background: rgba(250, 250, 250, 0.95);
           backdrop-filter: blur(10px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .nav-logo {
           font-size: 1.5rem;
           font-weight: 700;
           color: #ff0000;
+          letter-spacing: -0.5px;
         }
 
         .nav-links {
@@ -744,11 +750,12 @@ const App = () => {
         }
 
         .nav-links a {
-          color: #ffffff;
+          color: #2a2a2a;
           text-decoration: none;
           cursor: pointer;
           transition: color 0.3s;
           font-weight: 500;
+          font-size: 0.95rem;
         }
 
         .nav-links a:hover {
@@ -767,9 +774,9 @@ const App = () => {
           gap: 0.5rem;
           padding: 0.5rem 1rem;
           background: transparent;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(0, 0, 0, 0.1);
           border-radius: 20px;
-          color: white;
+          color: #2a2a2a;
           cursor: pointer;
           transition: all 0.3s;
           font-weight: 500;
@@ -784,7 +791,7 @@ const App = () => {
           display: none;
           background: none;
           border: none;
-          color: white;
+          color: #2a2a2a;
           cursor: pointer;
         }
 
@@ -798,6 +805,7 @@ const App = () => {
           align-items: center;
           overflow: hidden;
           padding-top: 80px;
+          background: #0a0a0a;
         }
 
         .neural-canvas {
@@ -835,6 +843,7 @@ const App = () => {
           margin-bottom: 1rem;
           line-height: 1.1;
           color: #ffffff;
+          letter-spacing: -2px;
         }
 
         .animated-text {
@@ -859,6 +868,7 @@ const App = () => {
           color: rgba(255, 255, 255, 0.7);
           margin-bottom: 2rem;
           animation: fadeInUp 1s ease-out 0.3s backwards;
+          font-weight: 400;
         }
 
         .cta-button {
@@ -905,12 +915,12 @@ const App = () => {
 
         /* About Section */
         .about {
-          padding: 8rem 5%;
+          padding: 10rem 5%;
           min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #000000;
+          background: #ffffff;
         }
 
         .about-content {
@@ -928,81 +938,89 @@ const App = () => {
 
         .section-title {
           font-size: clamp(2.5rem, 5vw, 4rem);
-          font-weight: 700;
-          margin-bottom: 2rem;
+          font-weight: 300;
+          margin-bottom: 3rem;
           text-align: center;
-          color: #ff0000;
+          color: #1a1a1a;
+          letter-spacing: -1px;
         }
 
         .about-text {
-          font-size: 1.3rem;
-          line-height: 1.8;
-          color: rgba(255, 255, 255, 0.8);
+          font-size: 1.25rem;
+          line-height: 2;
+          color: #666666;
           text-align: center;
-          margin-bottom: 4rem;
-          max-width: 800px;
+          margin-bottom: 5rem;
+          max-width: 700px;
           margin-left: auto;
           margin-right: auto;
+          font-weight: 300;
         }
 
         .stats {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 3rem;
-          margin-top: 4rem;
+          gap: 4rem;
+          margin-top: 5rem;
         }
 
         .stat-item {
           text-align: center;
-          padding: 2rem;
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 3rem 2rem;
+          border-radius: 0;
+          background: transparent;
+          border: none;
+          border-top: 1px solid #e8e8e8;
           transition: all 0.3s ease;
         }
 
         .stat-item:hover {
-          transform: translateY(-5px);
-          background: rgba(255, 0, 0, 0.05);
-          border-color: rgba(255, 0, 0, 0.3);
+          transform: translateY(-3px);
+          border-top-color: #ff0000;
         }
 
         .stat-item h3 {
-          font-size: 3rem;
-          color: #ff0000;
-          margin-bottom: 0.5rem;
+          font-size: 3.5rem;
+          color: #1a1a1a;
+          margin-bottom: 0.75rem;
+          font-weight: 200;
         }
 
         .stat-item p {
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 1.1rem;
+          color: #999999;
+          font-size: 0.95rem;
+          font-weight: 300;
+          text-transform: uppercase;
+          letter-spacing: 2px;
         }
 
         /* Models Section */
         .models {
-          padding: 8rem 5%;
+          padding: 10rem 5%;
           min-height: 100vh;
-          background: #000000;
+          background: #fafafa;
         }
 
         .models-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 2rem;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 3rem;
           max-width: 1200px;
           margin: 0 auto;
-          margin-top: 4rem;
+          margin-top: 5rem;
         }
 
         .model-card {
-          padding: 2.5rem;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 20px;
+          padding: 3rem;
+          background: #ffffff;
+          border: none;
+          border-radius: 0;
           cursor: pointer;
           transition: all 0.4s ease;
           opacity: 0;
           transform: translateY(30px);
+          box-shadow: none;
+          border-left: 2px solid transparent;
         }
 
         .model-card.visible {
@@ -1011,40 +1029,42 @@ const App = () => {
         }
 
         .model-card:hover {
-          transform: translateY(-10px);
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 0, 0, 0.3);
-          box-shadow: 0 20px 40px rgba(255, 0, 0, 0.2);
+          transform: translateY(-5px);
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.05);
+          border-left-color: #ff0000;
         }
 
         .model-icon {
-          width: 80px;
-          height: 80px;
+          width: 70px;
+          height: 70px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(255, 0, 0, 0.1);
-          border-radius: 20px;
-          margin-bottom: 1.5rem;
-          color: #ff0000;
+          background: transparent;
+          border-radius: 0;
+          margin-bottom: 2rem;
+          color: #1a1a1a;
           transition: all 0.3s ease;
         }
 
         .model-card:hover .model-icon {
-          transform: scale(1.1) rotate(5deg);
-          background: rgba(255, 0, 0, 0.2);
+          transform: scale(1.05);
+          color: #ff0000;
         }
 
         .model-title {
-          font-size: 1.8rem;
+          font-size: 1.5rem;
           margin-bottom: 1rem;
-          color: #ffffff;
+          color: #1a1a1a;
+          font-weight: 400;
+          letter-spacing: -0.5px;
         }
 
         .model-description {
-          color: rgba(255, 255, 255, 0.7);
-          line-height: 1.6;
-          margin-bottom: 1rem;
+          color: #888888;
+          line-height: 1.8;
+          margin-bottom: 1.5rem;
+          font-weight: 300;
         }
 
         .model-features {
@@ -1067,47 +1087,52 @@ const App = () => {
           padding: 0.5rem 0;
           padding-left: 1.5rem;
           position: relative;
-          color: rgba(255, 255, 255, 0.8);
+          color: #999999;
+          font-weight: 300;
         }
 
         .model-features li:before {
-          content: "→";
+          content: "—";
           position: absolute;
           left: 0;
-          color: #ff0000;
+          color: #cccccc;
         }
 
         .model-button {
-          margin-top: 1.5rem;
-          padding: 0.8rem 1.5rem;
+          margin-top: 2rem;
+          padding: 0.75rem 1.5rem;
           background: transparent;
-          border: 2px solid #ff0000;
-          color: #ff0000;
-          border-radius: 50px;
+          border: 1px solid #e8e8e8;
+          color: #1a1a1a;
+          border-radius: 0;
           cursor: pointer;
-          font-weight: 600;
+          font-weight: 300;
           transition: all 0.3s ease;
           width: 100%;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          font-size: 0.85rem;
         }
 
         .model-button:hover {
-          background: #ff0000;
+          background: #1a1a1a;
           color: white;
+          border-color: #1a1a1a;
         }
 
         /* Process Section */
         .process {
-          padding: 8rem 5%;
+          padding: 10rem 5%;
           min-height: 100vh;
           display: flex;
           flex-direction: column;
           justify-content: center;
-          background: #000000;
+          background: #ffffff;
         }
 
         .process-timeline {
-          max-width: 1000px;
-          margin: 4rem auto 0;
+          max-width: 900px;
+          margin: 5rem auto 0;
           position: relative;
         }
 
@@ -1117,78 +1142,106 @@ const App = () => {
           top: 0;
           left: 50%;
           transform: translateX(-50%);
-          width: 2px;
+          width: 1px;
           height: 100%;
-          background: linear-gradient(180deg, #ff0000, rgba(255, 0, 0, 0.3));
+          background: linear-gradient(180deg, #e8e8e8, rgba(232, 232, 232, 0.2));
         }
 
         .process-step {
-          display: flex;
-          gap: 2rem;
-          margin-bottom: 4rem;
+          display: grid;
+          grid-template-columns: 1fr auto 1fr;
+          gap: 3rem;
+          margin-bottom: 5rem;
           opacity: 0;
-          transform: translateX(-30px);
+          transform: translateY(30px);
           transition: all 0.6s ease;
+          align-items: center;
         }
 
         .process-timeline.visible .process-step {
           opacity: 1;
-          transform: translateX(0);
+          transform: translateY(0);
         }
 
-        .process-step:nth-child(even) {
-          flex-direction: row-reverse;
-          transform: translateX(30px);
+        .process-step:nth-child(odd) .step-content {
+          grid-column: 1;
+          grid-row: 1;
+          text-align: right;
+        }
+
+        .process-step:nth-child(odd) .step-number {
+          grid-column: 2;
+          grid-row: 1;
+        }
+
+        .process-step:nth-child(even) .step-content {
+          grid-column: 3;
+          grid-row: 1;
+          text-align: left;
+        }
+
+        .process-step:nth-child(even) .step-number {
+          grid-column: 2;
+          grid-row: 1;
         }
 
         .step-number {
           flex-shrink: 0;
-          width: 80px;
-          height: 80px;
+          width: 60px;
+          height: 60px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.5rem;
-          font-weight: 700;
-          background: #ff0000;
+          font-size: 1.2rem;
+          font-weight: 300;
+          background: transparent;
+          border: 1px solid #e8e8e8;
           border-radius: 50%;
-          box-shadow: 0 10px 30px rgba(255, 0, 0, 0.3);
-          color: white;
-        }
-
-        .step-content {
-          flex: 1;
-          padding: 1.5rem;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 15px;
+          box-shadow: none;
+          color: #1a1a1a;
           transition: all 0.3s ease;
         }
 
+        .process-step:hover .step-number {
+          border-color: #ff0000;
+          color: #ff0000;
+        }
+
+        .step-content {
+          padding: 2rem 0;
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          transition: all 0.3s ease;
+          box-shadow: none;
+        }
+
         .step-content:hover {
-          background: rgba(255, 0, 0, 0.05);
-          border-color: rgba(255, 0, 0, 0.3);
+          opacity: 0.7;
         }
 
         .step-content h3 {
           font-size: 1.5rem;
-          margin-bottom: 0.5rem;
-          color: #ff0000;
+          margin-bottom: 0.75rem;
+          color: #1a1a1a;
+          font-weight: 400;
+          letter-spacing: -0.5px;
         }
 
         .step-content p {
-          color: rgba(255, 255, 255, 0.7);
-          line-height: 1.6;
+          color: #888888;
+          line-height: 1.8;
+          font-weight: 300;
         }
 
         /* Contact Section */
         .contact {
-          padding: 8rem 5%;
+          padding: 10rem 5%;
           min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #000000;
+          background: #fafafa;
         }
 
         .contact-content {
@@ -1206,39 +1259,42 @@ const App = () => {
 
         .contact-subtitle {
           text-align: center;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 1.2rem;
-          margin-bottom: 3rem;
+          color: #888888;
+          font-size: 1.15rem;
+          margin-bottom: 4rem;
+          font-weight: 300;
         }
 
         .contact-form {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 2rem;
         }
 
         .contact-form input,
         .contact-form textarea {
-          padding: 1.2rem;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-          color: white;
+          padding: 1.5rem;
+          background: #ffffff;
+          border: none;
+          border-bottom: 1px solid #e8e8e8;
+          border-radius: 0;
+          color: #1a1a1a;
           font-size: 1rem;
           font-family: inherit;
           transition: all 0.3s ease;
+          font-weight: 300;
         }
 
         .contact-form input::placeholder,
         .contact-form textarea::placeholder {
-          color: rgba(255, 255, 255, 0.4);
+          color: #cccccc;
         }
 
         .contact-form input:focus,
         .contact-form textarea:focus {
           outline: none;
-          border-color: #ff0000;
-          background: rgba(255, 255, 255, 0.08);
+          border-bottom-color: #1a1a1a;
+          background: #ffffff;
         }
 
         .contact-form textarea {
@@ -1251,70 +1307,75 @@ const App = () => {
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
-          padding: 1.2rem;
-          font-size: 1.1rem;
-          font-weight: 600;
+          padding: 1.5rem;
+          font-size: 0.9rem;
+          font-weight: 300;
           color: white;
           background: #ff0000;
           border: none;
-          border-radius: 10px;
+          border-radius: 0;
           cursor: pointer;
           transition: all 0.3s ease;
+          text-transform: uppercase;
+          letter-spacing: 2px;
         }
 
         .submit-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(255, 0, 0, 0.4);
           background: #cc0000;
         }
 
         .success-message {
           text-align: center;
-          padding: 3rem;
-          background: rgba(255, 0, 0, 0.1);
-          border: 1px solid rgba(255, 0, 0, 0.3);
-          border-radius: 15px;
+          padding: 4rem 2rem;
+          background: transparent;
+          border: 1px solid #e8e8e8;
+          border-radius: 0;
         }
 
         .success-message h3 {
           font-size: 2rem;
           margin-bottom: 1rem;
-          color: #ff0000;
+          color: #1a1a1a;
+          font-weight: 300;
         }
 
         .success-message p {
-          color: rgba(255, 255, 255, 0.8);
+          color: #888888;
+          font-weight: 300;
         }
 
         /* Footer */
         .footer {
-          padding: 4rem 5% 2rem;
-          background: rgba(0, 0, 0, 0.5);
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 5rem 5% 3rem;
+          background: #1a1a1a;
+          border-top: none;
         }
 
         .footer-content {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 3rem;
+          gap: 4rem;
           max-width: 1200px;
-          margin: 0 auto 3rem;
+          margin: 0 auto 4rem;
         }
 
         .footer-section h3,
         .footer-section h4 {
-          margin-bottom: 1rem;
-          color: #ff0000;
+          margin-bottom: 1.5rem;
+          color: #ffffff;
+          font-weight: 300;
+          letter-spacing: 1px;
         }
 
         .footer-section p,
         .footer-section a {
-          color: rgba(255, 255, 255, 0.6);
+          color: rgba(255, 255, 255, 0.4);
           line-height: 2;
           text-decoration: none;
           display: block;
           transition: color 0.3s;
           cursor: pointer;
+          font-weight: 300;
         }
 
         .footer-section a:hover {
@@ -1323,9 +1384,12 @@ const App = () => {
 
         .footer-bottom {
           text-align: center;
-          padding-top: 2rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
-          color: rgba(255, 255, 255, 0.5);
+          padding-top: 3rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          color: rgba(255, 255, 255, 0.3);
+          font-weight: 300;
+          font-size: 0.85rem;
+          letter-spacing: 1px;
         }
 
         /* Mobile Responsive */
@@ -1336,7 +1400,7 @@ const App = () => {
             right: -100%;
             width: 100%;
             height: calc(100vh - 80px);
-            background: rgba(0, 0, 0, 0.98);
+            background: rgba(250, 250, 250, 0.98);
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -1403,26 +1467,26 @@ const App = () => {
 
         /* Selection Color */
         ::selection {
-          background: rgba(255, 0, 0, 0.3);
-          color: white;
+          background: rgba(255, 0, 0, 0.2);
+          color: #1a1a1a;
         }
 
         /* Scrollbar Styling */
         ::-webkit-scrollbar {
-          width: 10px;
+          width: 8px;
         }
 
         ::-webkit-scrollbar-track {
-          background: #000000;
+          background: #fafafa;
         }
 
         ::-webkit-scrollbar-thumb {
-          background: #ff0000;
-          border-radius: 10px;
+          background: #e8e8e8;
+          border-radius: 0;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-          background: #cc0000;
+          background: #cccccc;
         }
       `}</style>
         </div>
