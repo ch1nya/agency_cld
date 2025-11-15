@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Brain, Zap, Target, Mail, ArrowRight, Menu, X, ChevronDown, Globe } from 'lucide-react';
+import * as THREE from 'three';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // Языковые данные
 const translations = {
@@ -179,209 +181,222 @@ const translations = {
     }
 };
 
-// Компонент 3D AI Neural Network Animation
-const NeuralNetworkAnimation = () => {
-    const canvasRef = useRef(null);
+// Компонент 3D Cloud Animation
+const CloudAnimation = () => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+    const sceneRef = useRef<THREE.Scene | null>(null);
+    const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+    const animationIdRef = useRef<number | null>(null);
+    const startTimeRef = useRef<number>(Date.now());
+    const mouseXRef = useRef<number>(0);
+    const mouseYRef = useRef<number>(0);
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+        const container = containerRef.current;
+        if (!container) return;
 
-        const ctx = canvas.getContext('2d');
-        let animationId;
-
-        const setCanvasSize = () => {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+        const cloudShader = {
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D map;
+                uniform vec3 fogColor;
+                uniform float fogNear;
+                uniform float fogFar;
+                varying vec2 vUv;
+                void main() {
+                    float depth = gl_FragCoord.z / gl_FragCoord.w;
+                    float fogFactor = smoothstep( fogNear, fogFar, depth );
+                    gl_FragColor = texture2D( map, vUv );
+                    gl_FragColor.w *= pow( gl_FragCoord.z, 15.0 );
+                    gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor * 0.3 );
+                }
+            `
         };
-        setCanvasSize();
-        window.addEventListener('resize', setCanvasSize);
 
-        // Узлы нейронной сети
-        class Node {
-            constructor(x, y, z, layer) {
-                this.x = x;
-                this.y = y;
-                this.z = z;
-                this.layer = layer;
-                this.baseX = x;
-                this.baseY = y;
-                this.baseZ = z;
-                this.pulse = Math.random() * Math.PI * 2;
-            }
+        const scene = new THREE.Scene();
+        sceneRef.current = scene;
 
-            update(time) {
-                this.pulse += 0.02;
-                const pulseAmount = Math.sin(this.pulse) * 2;
-                this.z = this.baseZ + pulseAmount;
-            }
+        const width = container.offsetWidth || window.innerWidth;
+        const height = container.offsetHeight || window.innerHeight;
+        const camera = new THREE.PerspectiveCamera(
+            30,
+            width / height,
+            1,
+            3000
+        );
+        camera.position.z = 6000;
+        cameraRef.current = camera;
 
-            project(width, height) {
-                const scale = 200 / (200 + this.z);
-                return {
-                    x: this.x * scale + width / 2,
-                    y: this.y * scale + height / 2,
-                    scale: scale
-                };
-            }
-        }
-
-        // Создание слоев нейронной сети - меньше и компактнее
-        const layers = [5, 7, 7, 5];
-        const nodes = [];
-        const layerSpacing = 120;
-
-        layers.forEach((nodeCount, layerIndex) => {
-            const startX = -((layers.length - 1) * layerSpacing) / 2;
-            const x = startX + layerIndex * layerSpacing;
-            const nodeSpacing = 50;
-            const startY = -((nodeCount - 1) * nodeSpacing) / 2;
-
-            for (let i = 0; i < nodeCount; i++) {
-                const y = startY + i * nodeSpacing;
-                const z = (Math.random() - 0.5) * 60;
-                nodes.push(new Node(x, y, z, layerIndex));
-            }
+        const renderer = new THREE.WebGLRenderer({
+            antialias: false,
+            alpha: true
         });
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x000000, 0); // Прозрачный фон
+        rendererRef.current = renderer;
+        const canvas = renderer.domElement;
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        container.appendChild(canvas);
 
-        // Создание связей между слоями
-        const connections = [];
-        let nodeIndex = 0;
-        for (let layer = 0; layer < layers.length - 1; layer++) {
-            const currentLayerSize = layers[layer];
-            const nextLayerSize = layers[layer + 1];
-
-            for (let i = 0; i < currentLayerSize; i++) {
-                for (let j = 0; j < nextLayerSize; j++) {
-                    connections.push({
-                        from: nodeIndex + i,
-                        to: nodeIndex + currentLayerSize + j,
-                        activity: Math.random()
-                    });
-                }
-            }
-            nodeIndex += currentLayerSize;
+        // Создание градиентного фона
+        const bgCanvas = document.createElement("canvas");
+        bgCanvas.width = 32;
+        bgCanvas.height = height;
+        const context = bgCanvas.getContext("2d");
+        if (context) {
+            const gradient = context.createLinearGradient(0, 0, 0, bgCanvas.height);
+            gradient.addColorStop(0, "#e8f4f8");
+            gradient.addColorStop(0.5, "#d0e8f0");
+            gradient.addColorStop(1, "#b8dce8");
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            container.style.background = "url(" + bgCanvas.toDataURL("image/png") + ")";
+            container.style.backgroundSize = "32px 100%";
         }
 
-        let time = 0;
-        let rotation = 0;
+        const windowHalfX = width / 2;
+        const windowHalfY = height / 2;
 
-        const animate = () => {
-            time += 0.016;
-            rotation += 0.003;
-
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const width = canvas.width;
-            const height = canvas.height;
-
-            // Обновление узлов
-            nodes.forEach(node => node.update(time));
-
-            // Применение вращения
-            const rotatedNodes = nodes.map(node => {
-                const cos = Math.cos(rotation);
-                const sin = Math.sin(rotation);
-                const x = node.x * cos - node.z * sin;
-                const z = node.x * sin + node.z * cos;
-                return {
-                    x,
-                    y: node.y,
-                    z,
-                    layer: node.layer,
-                    project: (width, height) => {
-                        const scale = 200 / (200 + z);
-                        return {
-                            x: x * scale + width / 2,
-                            y: node.y * scale + height / 2,
-                            scale: scale
-                        };
-                    }
-                };
-            });
-
-            // Сортировка по глубине
-            const sortedConnections = connections
-                .map(conn => ({
-                    ...conn,
-                    avgZ: (rotatedNodes[conn.from].z + rotatedNodes[conn.to].z) / 2
-                }))
-                .sort((a, b) => a.avgZ - b.avgZ);
-
-            // Рисование связей
-            sortedConnections.forEach(conn => {
-                const from = rotatedNodes[conn.from].project(width, height);
-                const to = rotatedNodes[conn.to].project(width, height);
-
-                conn.activity += (Math.random() - 0.5) * 0.1;
-                conn.activity = Math.max(0, Math.min(1, conn.activity));
-
-                const opacity = conn.activity * 0.2;
-                const gradient = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
-                gradient.addColorStop(0, `rgba(200, 200, 200, ${opacity})`);
-                gradient.addColorStop(0.5, `rgba(255, 0, 0, ${opacity * 1.2})`);
-                gradient.addColorStop(1, `rgba(200, 200, 200, ${opacity})`);
-
-                ctx.strokeStyle = gradient;
-                ctx.lineWidth = conn.activity * 1.5;
-                ctx.beginPath();
-                ctx.moveTo(from.x, from.y);
-                ctx.lineTo(to.x, to.y);
-                ctx.stroke();
-            });
-
-            // Рисование узлов
-            const sortedNodes = rotatedNodes
-                .map((node, index) => ({ node, index }))
-                .sort((a, b) => a.node.z - b.node.z);
-
-            sortedNodes.forEach(({ node, index }) => {
-                const pos = node.project(width, height);
-                const size = 3 + pos.scale * 2.5;
-
-                const brightness = (node.z + 100) / 200;
-                const glow = Math.sin(time * 2 + index * 0.5) * 0.5 + 0.5;
-
-                // Внешнее свечение (только для активных узлов)
-                if (glow > 0.7) {
-                    const gradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, size * 3);
-                    gradient.addColorStop(0, `rgba(255, 0, 0, ${glow * 0.3})`);
-                    gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
-                    ctx.fillStyle = gradient;
-                    ctx.beginPath();
-                    ctx.arc(pos.x, pos.y, size * 3, 0, Math.PI * 2);
-                    ctx.fill();
+        const tLoader = new THREE.TextureLoader();
+        tLoader.load(
+            "https://mrdoob.com/lab/javascript/webgl/clouds/cloud10.png",
+            (texture: THREE.Texture) => {
+                texture.colorSpace = THREE.SRGBColorSpace;
+                init(texture);
+            },
+            undefined,
+            (error) => {
+                console.error('Error loading cloud texture:', error);
+                // Создаем простую текстуру-заглушку для облаков
+                const fallbackCanvas = document.createElement('canvas');
+                fallbackCanvas.width = 128;
+                fallbackCanvas.height = 128;
+                const fallbackCtx = fallbackCanvas.getContext('2d');
+                if (fallbackCtx) {
+                    // Создаем простой паттерн облака
+                    const gradient = fallbackCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    fallbackCtx.fillStyle = gradient;
+                    fallbackCtx.fillRect(0, 0, 128, 128);
+                    const fallbackTexture = new THREE.CanvasTexture(fallbackCanvas);
+                    fallbackTexture.colorSpace = THREE.SRGBColorSpace;
+                    init(fallbackTexture);
                 }
+            }
+        );
 
-                // Основной узел (серый)
-                const grayValue = Math.floor(180 + brightness * 60);
-                ctx.fillStyle = `rgba(${grayValue}, ${grayValue}, ${grayValue}, ${0.7 + pos.scale * 0.3})`;
-                ctx.beginPath();
-                ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
-                ctx.fill();
+        function init(texture: THREE.Texture) {
+            const fog = new THREE.Fog(0xe8f4f8, 500, 2500);
+            scene.fog = fog;
 
-                // Внутреннее ядро (белое для ярких узлов)
-                if (glow > 0.6) {
-                    ctx.fillStyle = `rgba(255, 255, 255, ${glow * 0.8})`;
-                    ctx.beginPath();
-                    ctx.arc(pos.x, pos.y, size * 0.4, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+            texture.magFilter = THREE.LinearMipMapLinearFilter;
+            texture.minFilter = THREE.LinearMipMapLinearFilter;
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    map: { value: texture },
+                    fogColor: { value: fog.color },
+                    fogNear: { value: fog.near },
+                    fogFar: { value: fog.far }
+                },
+                vertexShader: cloudShader.vertexShader,
+                fragmentShader: cloudShader.fragmentShader,
+                depthWrite: false,
+                depthTest: false,
+                transparent: true,
+                opacity: 0.9
             });
 
-            animationId = requestAnimationFrame(animate);
-        };
+            const planeGeo = new THREE.PlaneGeometry(64, 64);
+            const planeObj = new THREE.Object3D();
+            const geometries: THREE.BufferGeometry[] = [];
 
+            for (let i = 0; i < 8000; i++) {
+                planeObj.position.x = Math.random() * 1000 - 500;
+                planeObj.position.y = -Math.random() * Math.random() * 200 - 15;
+                planeObj.position.z = i;
+                planeObj.rotation.z = Math.random() * Math.PI;
+                planeObj.scale.x = planeObj.scale.y = Math.random() * Math.random() * 1.5 + 0.5;
+                planeObj.updateMatrix();
+
+                const clonedPlaneGeo = planeGeo.clone();
+                clonedPlaneGeo.applyMatrix4(planeObj.matrix);
+                geometries.push(clonedPlaneGeo);
+            }
+
+            const planeGeos = BufferGeometryUtils.mergeGeometries(geometries) as THREE.BufferGeometry;
+            const planesMesh = new THREE.Mesh(planeGeos, material);
+            planesMesh.renderOrder = 2;
+
+            const planesMeshA = planesMesh.clone();
+            planesMeshA.position.z = -8000;
+            planesMeshA.renderOrder = 1;
+
+            scene.add(planesMesh);
+            scene.add(planesMeshA);
+        }
+
+        function onDocumentMouseMove(event: MouseEvent) {
+            mouseXRef.current = (event.clientX - windowHalfX) * 0.25;
+            mouseYRef.current = (event.clientY - windowHalfY) * 0.15;
+        }
+
+        function onWindowResize() {
+            if (!cameraRef.current || !rendererRef.current || !containerRef.current) return;
+            const width = containerRef.current.offsetWidth;
+            const height = containerRef.current.offsetHeight;
+            cameraRef.current.aspect = width / height;
+            cameraRef.current.updateProjectionMatrix();
+            rendererRef.current.setSize(width, height);
+        }
+
+        function animate() {
+            if (!cameraRef.current || !rendererRef.current || !sceneRef.current) return;
+
+            animationIdRef.current = requestAnimationFrame(animate);
+
+            const position = ((Date.now() - startTimeRef.current) * 0.03) % 8000;
+
+            cameraRef.current.position.x += (mouseXRef.current - cameraRef.current.position.x) * 0.01;
+            cameraRef.current.position.y += (-mouseYRef.current - cameraRef.current.position.y) * 0.01;
+            cameraRef.current.position.z = -position + 8000;
+
+            rendererRef.current.render(sceneRef.current, cameraRef.current);
+        }
+
+        document.addEventListener("mousemove", onDocumentMouseMove, false);
+        window.addEventListener("resize", onWindowResize, false);
         animate();
 
         return () => {
-            window.removeEventListener('resize', setCanvasSize);
-            cancelAnimationFrame(animationId);
+            document.removeEventListener("mousemove", onDocumentMouseMove, false);
+            window.removeEventListener("resize", onWindowResize, false);
+            if (animationIdRef.current) {
+                cancelAnimationFrame(animationIdRef.current);
+            }
+            if (rendererRef.current && containerRef.current) {
+                containerRef.current.removeChild(rendererRef.current.domElement);
+            }
+            if (sceneRef.current) {
+                sceneRef.current.clear();
+            }
         };
     }, []);
 
-    return <canvas ref={canvasRef} className="neural-canvas" />;
+    return <div ref={containerRef} className="cloud-canvas" />;
 };
 
 // Хук для анимации при скролле
@@ -430,7 +445,7 @@ const HeroSection = ({ t, lang }) => {
 
     return (
         <section className="hero">
-            <NeuralNetworkAnimation />
+            <CloudAnimation />
 
             <div className="hero-content">
                 <h1 className="hero-title">
@@ -805,16 +820,27 @@ const App = () => {
           align-items: center;
           overflow: hidden;
           padding-top: 80px;
-          background: #0a0a0a;
+          background: #e8f4f8;
         }
 
-        .neural-canvas {
+        .cloud-canvas {
           position: absolute;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
           z-index: 1;
+          pointer-events: none;
+          opacity: 0.8;
+        }
+        
+        .cloud-canvas canvas {
+          display: block;
+          width: 100% !important;
+          height: 100% !important;
+          position: absolute;
+          top: 0;
+          left: 0;
         }
 
         .hero-content {
@@ -844,12 +870,18 @@ const App = () => {
           line-height: 1.1;
           color: #ffffff;
           letter-spacing: -2px;
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 
+                       0 4px 20px rgba(0, 0, 0, 0.3),
+                       0 0 30px rgba(0, 0, 0, 0.2);
         }
 
         .animated-text {
           display: block;
           color: #ff0000;
           animation: slideIn 0.6s ease-out;
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 
+                       0 4px 20px rgba(0, 0, 0, 0.3),
+                       0 0 30px rgba(255, 0, 0, 0.3);
         }
 
         @keyframes slideIn {
@@ -865,10 +897,13 @@ const App = () => {
 
         .hero-subtitle {
           font-size: clamp(1rem, 2vw, 1.5rem);
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.9);
           margin-bottom: 2rem;
           animation: fadeInUp 1s ease-out 0.3s backwards;
           font-weight: 400;
+          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 
+                       0 4px 16px rgba(0, 0, 0, 0.4),
+                       0 0 20px rgba(0, 0, 0, 0.2);
         }
 
         .cta-button {
